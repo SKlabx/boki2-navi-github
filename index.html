@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>簿記2級 合格ナビ</title>
+<style>
+:root{--bg:#fff;--txt:#171A20;--sub:#5C5E62;--line:#E2E3E3;--blue:#3E6AE1;--red:#E82127;color-scheme:light;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--txt:#F4F4F4;--sub:#A2A3A5;--line:#26282B;--red:#FF3B3F;color-scheme:dark}}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
+form{width:min(380px,100%)}
+h1{font-size:22px;font-weight:600;margin:0 0 6px}
+p{color:var(--sub);font-size:14px;margin:0 0 28px;line-height:1.7}
+label{font-size:13px;color:var(--sub);display:block;margin-bottom:6px}
+input[type=password]{width:100%;font:inherit;font-size:18px;padding:12px;border:1px solid var(--line);border-radius:4px;background:transparent;color:inherit;letter-spacing:.06em}
+input:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.rem{display:flex;gap:8px;align-items:center;margin:14px 0 22px;font-size:14px;color:var(--sub)}
+button{width:100%;font:inherit;font-weight:500;border:0;border-radius:4px;background:var(--blue);color:#fff;padding:12px;cursor:pointer}
+button:disabled{opacity:.5}
+#msg{min-height:22px;font-size:14px;margin-top:14px;color:var(--sub)}
+#msg.err{color:var(--red)}
+</style>
+</head>
+<body>
+<form id="f" autocomplete="off">
+  <h1>簿記2級 合格ナビ</h1>
+  <p>このサイトはパスコードで保護されています。</p>
+  <label for="pw">パスコード</label>
+  <input type="password" id="pw" required autofocus>
+  <label class="rem"><input type="checkbox" id="rem"> この端末でパスコードを記憶する</label>
+  <button id="go">開く</button>
+  <div id="msg" role="status"></div>
+</form>
+<script>
+(()=>{"use strict";
+const $=s=>document.querySelector(s);
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+let MAN=null;
+async function manifest(){if(MAN)return MAN;const r=await fetch("data/manifest.json",{cache:"no-cache"});if(!r.ok)throw new Error("manifest");MAN=await r.json();return MAN}
+async function derive(pw,m){const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  return crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:unb64(m.salt),iterations:m.iter},base,256)}
+async function dec(raw,buf){const k=await crypto.subtle.importKey("raw",raw,"AES-GCM",false,["decrypt"]);const u=new Uint8Array(buf);return crypto.subtle.decrypt({name:"AES-GCM",iv:u.slice(0,12)},k,u.slice(12))}
+async function unlock(raw,remember){
+  const m=await manifest();
+  await dec(raw,unb64(m.check));   // 鍵が違えばここで失敗する
+  $("#msg").textContent="読み込んでいます…";
+  const r=await fetch(m.app,{cache:"no-cache"});if(!r.ok)throw new Error("app");
+  const html=new TextDecoder().decode(await dec(raw,await r.arrayBuffer()));
+  sessionStorage.setItem("boki2-key",b64(raw));sessionStorage.setItem("boki2-manifest",JSON.stringify(m));
+  if(remember)localStorage.setItem("boki2-remember",b64(raw));
+  document.open();document.write(html);document.close();
+}
+$("#f").addEventListener("submit",async e=>{e.preventDefault();const btn=$("#go"),msg=$("#msg");btn.disabled=true;msg.className="";msg.textContent="確認しています…";
+  try{const m=await manifest();const raw=await derive($("#pw").value,m);await unlock(raw,$("#rem").checked)}
+  catch(err){msg.className="err";msg.textContent=err&&err.message==="manifest"?"データを読み込めませんでした。通信状態を確認してください。":"パスコードが違います。";btn.disabled=false;$("#pw").select()}});
+(async()=>{const s=localStorage.getItem("boki2-remember")||sessionStorage.getItem("boki2-key");if(!s)return;
+  $("#msg").textContent="開いています…";
+  try{await unlock(unb64(s),false)}catch(e){localStorage.removeItem("boki2-remember");sessionStorage.removeItem("boki2-key");$("#msg").textContent=""}})();
+})();
+</script>
+</body>
+</html>
