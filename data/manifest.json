@@ -2,38 +2,32 @@
  "v": 1,
  "kdf": "PBKDF2-SHA256",
  "iter": 310000,
- "salt": "Y/YbBSzT/BsjTYSa1gmo5A==",
- "check": "nIoy1ZlaUhfHOlnfiWEML3VEb+tdothaSqSMJH9WnsrvFEVt",
+ "salt": "kf1kIZbN1z6m1X+sOk8PuA==",
+ "check": "YbmFbBlJL5W+egkID6L7GcIALrs5wsE+8yB9e3hWsMklNGdV",
  "app": "data/app.bin",
  "pdf": {
   "商T": {
    "name": "s-text.pdf",
    "chunks": [
-    "data/s-text-0.bin",
-    "data/s-text-1.bin",
-    "data/s-text-2.bin",
-    "data/s-text-3.bin"
+    "data/s-text.bin"
    ]
   },
   "商P": {
    "name": "s-prob.pdf",
    "chunks": [
-    "data/s-prob-0.bin",
-    "data/s-prob-1.bin"
+    "data/s-prob.bin"
    ]
   },
   "工T": {
    "name": "k-text.pdf",
    "chunks": [
-    "data/k-text-0.bin"
+    "data/k-text.bin"
    ]
   },
   "工P": {
    "name": "k-prob.pdf",
    "chunks": [
-    "data/k-prob-0.bin",
-    "data/k-prob-1.bin",
-    "data/k-prob-2.bin"
+    "data/k-prob.bin"
    ]
   }
  }
